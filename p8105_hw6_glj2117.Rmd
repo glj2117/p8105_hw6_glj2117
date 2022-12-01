@@ -130,7 +130,25 @@ birthweight_data = read_csv("./data/birthweight.csv") %>%
          )
 ```
 Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
+
+```
+Family income as a predictor for birthweight. I chose family income as a predictor because there is some evidence that low birthweight is a good indicator of further health disparities (both racial and socioeconomic).
+
 ```{r}
+
+birthweight_model = lm(bwt ~ fincome, data = birthweight_data) 
+
+birthweight_model %>% 
+  broom::tidy()
+
+modelr::add_residuals(birthweight_data, birthweight_model)  
+
+modelr::add_predictions(birthweight_data, birthweight_model)
+
+birthweight_data %>% 
+  modelr::add_residuals(birthweight_model) %>% 
+  modelr::add_predictions(birthweight_model) %>% 
+  ggplot(aes(x = resid, y = pred)) + geom_violin()
 
 ```
 
@@ -139,3 +157,39 @@ Compare your model to two others:
 One using length at birth and gestational age as predictors (main effects only)
 One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
 Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
+
+```{r}
+
+bw_model_2 = lm(bwt ~ blength + gaweeks, data = birthweight_data) %>% 
+  broom::tidy()
+
+
+bw_model_3 = lm(bwt ~ bhead * blength * babysex, data = birthweight_data) %>% 
+  broom::tidy()
+
+
+cv_df = 
+  crossv_mc(birthweight_data, 100) 
+  
+cv_df = 
+  cv_df %>% 
+  mutate(
+    birthweight_model  = map(train, ~lm(bwt ~ fincome, data = .x)),
+    bw_model_2 = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+    bw_model_3 = map (train, ~lm(bwt ~bhead * blength * babysex, data = .x))) %>% 
+  mutate(
+    rmse_birthweight_model = map2_dbl(birthweight_model, test, ~rmse(model = .x, data = .y)),
+    rmse_bw_model_2 = map2_dbl(bw_model_2, test, ~rmse(model = .x, data = .y)),
+    rmse_bw_model_3 = map2_dbl(bw_model_3, test, ~rmse(model = .x, data = .y)))
+    
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
+```
+Given the RMSEs, bw_model_3 (the model which includes all interaction terms and the three-way interaction) is the "winner," with the highest accuracy. By comparison, my linear model has the highest RMSE and is much less accurate than the other two models- due to the fact that my model only included one predictor.
