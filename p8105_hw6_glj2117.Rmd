@@ -107,6 +107,13 @@ city_glm =
 Create a plot that shows the estimated ORs and CIs for each city. Organize cities according to estimated OR, and comment on the plot.
 
 ```{r}
+city_glm %>% 
+  ggplot(aes(x = fct_reorder(city_state, OR), y = OR)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("City") +
+  ylab("Estimated Odds Ratio for Solving Crimes by Gender")
 
 ```
 
