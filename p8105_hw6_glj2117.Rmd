@@ -116,6 +116,7 @@ city_glm %>%
   ylab("Estimated Odds Ratio for Solving Crimes by Gender")
 
 ```
+This plot shows the estimated odds ratios for solving crimes involving male victims (vs. female victims), with the 95% CIs as error bars. The city with the highest odds ratio is Albuquerque, NM, while the lowest odds ratio is in NYC. However, it seems that as odds ratios increase, so do confidence intervals (although not for all cities). NYC has a much smaller confidence interval range than Albuqueque (which has an extremely wide CI range) likely due to the increased sample size in NYC. It seems that, in general, the cities with higher odds ratios for solving crimes involving male victims are smaller, less urban cities, while the larger urban areas  such as NYC, Chicago, Philadelphis, etc.. have lower odds ratios.
 
 ## Problem 3- Birthweight dataset
 
@@ -176,7 +177,7 @@ cv_df =
   mutate(
     birthweight_model  = map(train, ~lm(bwt ~ fincome, data = .x)),
     bw_model_2 = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
-    bw_model_3 = map (train, ~lm(bwt ~bhead * blength * babysex, data = .x))) %>% 
+    bw_model_3 = map(train, ~lm(bwt ~bhead * blength * babysex, data = .x))) %>% 
   mutate(
     rmse_birthweight_model = map2_dbl(birthweight_model, test, ~rmse(model = .x, data = .y)),
     rmse_bw_model_2 = map2_dbl(bw_model_2, test, ~rmse(model = .x, data = .y)),
